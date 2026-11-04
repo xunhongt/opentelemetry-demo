@@ -1,0 +1,26 @@
+# Copyright The OpenTelemetry Authors
+# SPDX-License-Identifier: Apache-2.0
+
+# Agent layer patch for running without compose.observability.yaml:
+# removes the chatbot's dependency on opamp-server and its OpAMP settings.
+#
+# Usage:
+#   docker compose -f compose.yaml -f compose.full.yaml \
+#                  -f compose.agent.yaml -f compose.agent-no-o11y.yaml \
+#                  -f compose.extras.yaml up
+
+services:
+  chatbot:
+    depends_on: !override
+      agent:
+        condition: service_started
+    environment: !override
+      - AGENT_PORT
+      - AGENT_ENDPOINT
+      - CHATBOT_PORT
+      - CHATBOT_ROOT_PATH
+      - OTEL_RESOURCE_ATTRIBUTES=${OTEL_RESOURCE_ATTRIBUTES},service.criticality=low
+      - OTEL_SERVICE_NAME=chatbot
+      - OTEL_EXPORTER_OTLP_ENDPOINT=http://${OTEL_COLLECTOR_HOST}:${OTEL_COLLECTOR_PORT_HTTP}
+      - OTEL_EXPORTER_OTLP_INSECURE=true
+      - OTEL_PYTHON_SDK_INTERNAL_METRICS_ENABLED=true
